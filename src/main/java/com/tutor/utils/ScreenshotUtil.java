@@ -29,7 +29,6 @@ public class ScreenshotUtil {
             String fileName = testName + "_" + timestamp + ".png";
             String filePath = screenshotPath + File.separator + fileName;
 
-            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
             try (FileOutputStream fos = new FileOutputStream(filePath)) {
                 byte[] bytes = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
                 fos.write(bytes);
