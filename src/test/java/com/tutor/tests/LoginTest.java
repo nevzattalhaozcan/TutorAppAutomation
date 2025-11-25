@@ -5,6 +5,7 @@ import com.tutor.base.ConfigReader;
 import com.tutor.listeners.FailureScreenshotListener;
 import com.tutor.pages.HomePage;
 import com.tutor.pages.LoginPage;
+import com.tutor.utils.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Listeners;
@@ -20,7 +21,7 @@ public class LoginTest extends BaseTest {
         loginPage.waitForPageLoad();
     }
 
-    @Test
+    @Test(enabled = true)
     public void testSuccessfulLogin() {
         logger.info("Starting testSuccessfulLogin");
         HomePage homePage = loginPage.login(
@@ -29,27 +30,9 @@ public class LoginTest extends BaseTest {
 
         String welcomeText = homePage.getWelcomeText();
         Assert.assertTrue(
-                normalize(welcomeText).contains(normalize(HomePage.WELCOME_ACCESSIBILITY_ID)),
-                "Expected welcome text to resemble '" + HomePage.WELCOME_ACCESSIBILITY_ID + "' but was: " + welcomeText);
+                TestUtils.normalize(welcomeText).contains(TestUtils.normalize(HomePage.USERS_NAME)),
+                "Expected welcome text to resemble '" + HomePage.USERS_NAME + "' but was: " + welcomeText);
         logger.info("testSuccessfulLogin passed");
     }
 
-    private String normalize(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replaceAll("[\\s,]", "").trim();
-    }
-
-    @Test(enabled = false)
-    public void testInvalidCredentials() {
-        logger.info("Starting testInvalidCredentials");
-        loginPage.enterEmail("invalid@em.com")
-                .enterPassword("invalid")
-                .clickLoginButton();
-
-        //Assert.assertTrue(loginPage.isErrorMessageDisplayed());
-        Assert.assertTrue(false);
-        logger.info("testInvalidCredentials passed");
-    }
 }

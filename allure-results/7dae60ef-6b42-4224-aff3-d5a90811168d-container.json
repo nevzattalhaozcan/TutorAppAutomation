@@ -1,0 +1,1 @@
+{"uuid":"7dae60ef-6b42-4224-aff3-d5a90811168d","name":"com.tutor.base.BaseTest.setUp","children":["4f4aaad1-ad26-49c5-8c99-bb7e5b73ba4e"],"description":"","befores":[{"name":"setUp","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1764081606287,"stop":1764081611923}],"afters":[],"start":1764081606286,"stop":1764081611923}

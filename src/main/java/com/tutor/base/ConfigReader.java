@@ -25,6 +25,10 @@ public class ConfigReader {
     }
 
     public static String getProperty(String key) {
+        String systemValue = System.getProperty(key);
+        if (systemValue != null) {
+            return systemValue;
+        }
         String value = properties.getProperty(key);
         if (value == null) {
             throw new IllegalArgumentException("Property not foud: " + key);

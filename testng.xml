@@ -6,4 +6,14 @@
             <class name="com.tutor.tests.LoginTest"></class>
         </classes>
     </test>
+    <test name="Homework Tests">
+        <classes>
+            <class name="com.tutor.tests.HomeworkTest"></class>
+        </classes>
+    </test>
+    <test name="Appointment Tests">
+        <classes>
+            <class name="com.tutor.tests.AppointmentTest"></class>
+        </classes>
+    </test>
 </suite>

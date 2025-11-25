@@ -30,8 +30,10 @@ public class DriverFactory {
         UiAutomator2Options options = new UiAutomator2Options();
         options.setAppPackage(ConfigReader.getProperty("android.app.package"));
         options.setAppActivity(ConfigReader.getProperty("android.app.activity"));
+        options.setApp(ConfigReader.getProperty("android.app"));
         options.setAutoGrantPermissions(true);
         options.setNoReset(false);
+        options.setAvd(ConfigReader.getProperty("android.avd.device"));
         options.setFullReset(false);
         options.setUninstallOtherPackages("com.tutorapp.other");
 

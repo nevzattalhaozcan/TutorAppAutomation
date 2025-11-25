@@ -2,6 +2,7 @@ package com.tutor.pages;
 
 import com.tutor.base.ConfigReader;
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.HidesKeyboard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.*;
@@ -25,6 +26,7 @@ public class BasePage {
     private static final List<String> TEXT_ATTRIBUTES = Arrays.asList("text", "contentDescription", "label", "name", "value");
     private static final String MOBILE_SET_TEXT_COMMAND = "mobile: setText";
     private static final String MOBILE_GET_TEXT_COMMAND = "mobile: getText";
+    private enum ClickStrategy {DIRECT, MOBILE_GESTURE, POINTER_TAP, NONE}
 
     public BasePage(AppiumDriver driver) {
         this.driver = driver;
@@ -61,14 +63,74 @@ public class BasePage {
     }
 
     protected void click(By locator) {
-        try {
-            WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
-            element.click();
-            logger.info("Clicked on element: " + locator);
-        } catch (Exception e) {
-            logger.error("Failed to click element: " + locator, e);
-            throw e;
+        WebElement element = waitForClickability(locator);
+        ClickStrategy strategy = performClickWithFallbacks(locator, element);
+        if (strategy == ClickStrategy.NONE) {
+            String message = "Unable to click element after fallback attempts: " + locator;
+            logger.error(message);
+            throw new RuntimeException(message);
         }
+        logger.info("{} click succeeded on element: {}", strategy, locator);
+    }
+
+    protected boolean waitForOptionalVisibility(By locator, Duration timeout) {
+        try {
+            new WebDriverWait(driver, timeout).until(ExpectedConditions.visibilityOfElementLocated(locator));
+            return true;
+        } catch (TimeoutException ex) {
+            logger.debug("Optional visibility wait timed out for {}", locator);
+            return false;
+        }
+    }
+
+    protected boolean waitForOptionalInvisibility(By locator, Duration timeout) {
+        try {
+            new WebDriverWait(driver, timeout).until(ExpectedConditions.invisibilityOfElementLocated(locator));
+            return true;
+        } catch (TimeoutException ex) {
+            logger.debug("Optional invisibility wait timed out for {}", locator);
+            return false;
+        }
+    }
+
+    protected void scrollIntoView(By locator) {
+        final int maxAttemptsPerDirection = 3;
+        if (isElementDisplayed(locator)) {
+            return;
+        }
+        for (Direction direction : new Direction[]{Direction.UP, Direction.DOWN}) {
+            for (int i = 0; i < maxAttemptsPerDirection; i++) {
+                swipe(direction);
+                if (isElementDisplayed(locator)) {
+                    return;
+                }
+            }
+        }
+        logger.warn("Failed to scroll element {} into view after {} attempts per direction", locator, maxAttemptsPerDirection);
+    }
+
+    protected void hideKeyboardIfVisible() {
+        if (driver instanceof HidesKeyboard hidesKeyboard) {
+            try {
+                hidesKeyboard.hideKeyboard();
+            } catch (Exception e) {
+                logger.debug("hideKeyboard call did not change state: {}", e.getMessage());
+            }
+            return;
+        }
+        logger.debug("Driver does not support hiding keyboard");
+    }
+
+    protected boolean clickUntilVisible(By clickLocator, By expectedLocator, Duration wait, int attempts) {
+        for (int i = 0; i < attempts; i++) {
+            scrollIntoView(clickLocator);
+            click(clickLocator);
+            if (waitForOptionalVisibility(expectedLocator, wait)) {
+                return true;
+            }
+            logger.warn("Post-click locator {} not visible (attempt {}/{})", expectedLocator, i + 1, attempts);
+        }
+        return false;
     }
 
     protected void enterText(By locator, String text) {
@@ -202,7 +264,7 @@ public class BasePage {
         args.put("text", text);
         args.put("replace", true);
 
-        executeMobileCommand(MOBILE_SET_TEXT_COMMAND, args);
+        executeMobileCommandSilently(MOBILE_SET_TEXT_COMMAND, args);
         logger.info("Fallback mobile:setText executed for element id: " + remoteWebElement.getId());
     }
 
@@ -215,7 +277,7 @@ public class BasePage {
         Map<String, Object> args = new HashMap<>();
         args.put("elementId", remoteWebElement.getId());
 
-        Object result = executeMobileCommand(MOBILE_GET_TEXT_COMMAND, args);
+        Object result = executeMobileCommandForResult(MOBILE_GET_TEXT_COMMAND, args);
         if (result != null) {
             return result.toString();
         }
@@ -223,12 +285,81 @@ public class BasePage {
         return null;
     }
 
-    private Object executeMobileCommand(String command, Map<String, Object> args) {
+    private void executeMobileCommandSilently(String command, Map<String, Object> args) {
+        try {
+            driver.executeScript(command, args);
+        } catch (Exception ex) {
+            logger.warn("Execution of {} failed with args {}", command, args, ex);
+        }
+    }
+
+    private Object executeMobileCommandForResult(String command, Map<String, Object> args) {
         try {
             return driver.executeScript(command, args);
         } catch (Exception ex) {
             logger.warn("Execution of {} failed with args {}", command, args, ex);
             return null;
         }
+    }
+
+    private ClickStrategy performClickWithFallbacks(By locator, WebElement element) {
+        try {
+            element.click();
+            return ClickStrategy.DIRECT;
+        } catch (WebDriverException clickException) {
+            logger.warn("Standard click failed for {}, applying fallbacks", locator, clickException);
+
+            if (performMobileClick(element)) {
+                return ClickStrategy.MOBILE_GESTURE;
+            }
+
+            if (performPointerTap(element)) {
+                return ClickStrategy.POINTER_TAP;
+            }
+
+            logger.error("All click fallbacks failed for {}", locator, clickException);
+            return ClickStrategy.NONE;
+        }
+    }
+
+    private boolean performMobileClick(WebElement element) {
+        if (!(element instanceof RemoteWebElement remoteWebElement)) {
+            return false;
+        }
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("elementId", remoteWebElement.getId());
+
+        try {
+            driver.executeScript("mobile: clickGesture", args);
+            return true;
+        } catch (Exception ex) {
+            logger.warn("mobile: clickGesture failed for element {}", remoteWebElement.getId(), ex);
+            return false;
+        }
+    }
+
+    private boolean performPointerTap(WebElement element) {
+        try {
+            Point location = element.getLocation();
+            Dimension size = element.getSize();
+            int centerX = location.getX() + (size.getWidth() / 2);
+            int centerY = location.getY() + (size.getHeight() / 2);
+            tapAt(centerX, centerY);
+            return true;
+        } catch (Exception e) {
+            logger.warn("Pointer tap failed for element {}", element, e);
+            return false;
+        }
+    }
+
+    protected void tapAt(int x, int y) {
+        PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger-single-tap");
+        Sequence tapSequence = new Sequence(finger, 1);
+        tapSequence.addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), x, y));
+        tapSequence.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+        tapSequence.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+        driver.perform(java.util.Collections.singletonList(tapSequence));
     }
 }
