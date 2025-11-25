@@ -9,13 +9,6 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.PageFactory;
 
-import com.mailosaur.MailosaurClient;
-import com.mailosaur.MailosaurException;
-import com.mailosaur.models.Message;
-import com.mailosaur.models.MessageSearchParams;
-import com.mailosaur.models.SearchCriteria;
-
-import java.io.IOException;
 import java.time.Duration;
 
 public class LoginPage extends BasePage {

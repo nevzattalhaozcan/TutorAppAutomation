@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: macos-latest
@@ -29,16 +32,21 @@ jobs:
     - name: Run Appium Tests
       uses: reactivecircus/android-emulator-runner@v2
       with:
-        api-level: 29
-        target: default
+        api-level: 30
+        target: google_apis
         arch: x86_64
         profile: Nexus 6
         avd-name: test_device
-        force-avd-creation: false
+        force-avd-creation: true
+        ram-size: 4096M
+        heap-size: 1024M
         emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: |
+          adb wait-for-device
+          adb shell input keyevent 82
           appium --log-level error &
+          sleep 15
           mvn clean test -Dtest=HomeworkTest -Dandroid.avd.device=test_device -Dandroid.app=$GITHUB_WORKSPACE/app-prod-release.apk
 
     - name: Get Allure history

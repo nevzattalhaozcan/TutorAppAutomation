@@ -2,7 +2,6 @@ package com.tutor.pages;
 
 import com.tutor.base.ConfigReader;
 import com.tutor.data.MenuOptions;
-import com.tutor.data.StudentTabs;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.pagefactory.AppiumFieldDecorator;
@@ -26,7 +25,6 @@ public class HomePage extends BasePage {
     private static final By MENU_MESSAGES_OPT = AppiumBy.accessibilityId("Mesajlar\\nSekme 7 / 9");
     private static final By MENU_NOTIFICATIONS_OPT = AppiumBy.accessibilityId("Bildirimler\\nSekme 8 / 9");
     private static final By MENU_SETTINGS_OPT = AppiumBy.accessibilityId("Ayarlar\\nSekme 9 / 9");
-    private static final By MENU_VERSION_TXT = AppiumBy.androidUIAutomator("new UiSelector().descriptionContains(\"Sürüm\")");
 
 
     public HomePage(AppiumDriver driver) {

@@ -1,13 +1,11 @@
 package com.tutor.pages;
 
-import com.beust.ah.A;
 import com.tutor.base.ConfigReader;
 import com.tutor.data.StudentTabs;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.pagefactory.AppiumFieldDecorator;
 import org.openqa.selenium.By;
-import org.openqa.selenium.devtools.v120.v120CdpInfo;
 import org.openqa.selenium.support.PageFactory;
 
 public class StudentDetailsPage extends BasePage {
