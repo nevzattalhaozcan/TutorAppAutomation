@@ -41,8 +41,8 @@ jobs:
         echo "platform=Android" > src/main/resources/config.properties
         echo "appium.server.url=http://127.0.0.1:4723" >> src/main/resources/config.properties
         echo "appium.timeout=30" >> src/main/resources/config.properties
-        echo "implicit.wait=10" >> src/main/resources/config.properties
-        echo "explicit.wait=15" >> src/main/resources/config.properties
+        echo "implicit.wait=15" >> src/main/resources/config.properties
+        echo "explicit.wait=30" >> src/main/resources/config.properties
         echo "test.user.email=purrfectprose@gmail.com" >> src/main/resources/config.properties
         echo "test.user.password=123456" >> src/main/resources/config.properties
         echo "test.user.name=Mehmet Yilmaz" >> src/main/resources/config.properties

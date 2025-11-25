@@ -82,6 +82,7 @@ public class LoginPage extends BasePage {
     public LoginPage enterPassword(String password) {
         logger.info("Entering password");
         enterText(passwordField, password);
+        hideKeyboardIfVisible();
         return this;
     }
 
