@@ -63,7 +63,7 @@ jobs:
         force-avd-creation: true
         ram-size: 3072M
         heap-size: 1024M
-        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -feature -Vulkan
         disable-animations: true
         script: |
           adb devices
